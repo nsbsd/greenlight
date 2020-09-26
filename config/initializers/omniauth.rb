@@ -12,6 +12,7 @@ Rails.application.config.providers = []
 Rails.application.config.omniauth_bn_launcher = Rails.configuration.loadbalanced_configuration
 Rails.application.config.omniauth_ldap = ENV['LDAP_SERVER'].present? && ENV['LDAP_UID'].present? &&
                                          ENV['LDAP_BASE'].present?
+Rails.application.config.omniauth_saml = ENV['SAML_IDP_SSO_TARGET_URL'].present? && ENV['SAML_ISSUER'].present?
 Rails.application.config.omniauth_twitter = ENV['TWITTER_ID'].present? && ENV['TWITTER_SECRET'].present?
 Rails.application.config.omniauth_google = ENV['GOOGLE_OAUTH2_ID'].present? && ENV['GOOGLE_OAUTH2_SECRET'].present?
 Rails.application.config.omniauth_office365 = ENV['OFFICE365_KEY'].present? &&
@@ -33,6 +34,25 @@ Rails.application.config.middleware.use OmniAuth::Builder do
   else
     Rails.application.config.providers << :ldap if Rails.configuration.omniauth_ldap
 
+    if Rails.configuration.omniauth_saml
+      Rails.application.config.providers << :saml
+
+      redirect = ENV['OAUTH2_REDIRECT'].present? ? File.join(ENV['OAUTH2_REDIRECT'], "auth", "saml", "callback") : nil
+
+      provider :saml,
+        assertion_consumer_service_url: redirect,
+        issuer: ENV['SAML_ISSUER'],
+        idp_sso_target_url: ENV['SAML_IDP_SSO_TARGET_URL'],
+        idp_slo_target_url: ENV['SAML_IDP_SLO_TARGET_URL'],
+        idp_cert: ENV['SAML_IDP_CERT'],
+        idp_cert_fingerprint: ENV['SAML_IDP_CERT_FINGERPRINT'],
+        name_identifier_format: ENV['SAML_NAME_IDENTIFIER_FORMAT'],
+        uid_attribute: ENV['SAML_UID_ATTRIBUTE'],
+        attribute_statements: {
+          email:  [ENV['SAML_EMAIL_ATTRIBUTE'], 'http://schemas.xmlsoap.org/ws/2005/05/identity/claims/emailaddress'],
+          name:   [ENV['SAML_NAME_ATTRIBUTE'],  'http://schemas.xmlsoap.org/ws/2005/05/identity/claims/name'] },
+        setup: SETUP_PROC
+    end
     if Rails.configuration.omniauth_twitter
       Rails.application.config.providers << :twitter
 
