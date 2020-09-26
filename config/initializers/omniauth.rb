@@ -48,9 +48,14 @@ Rails.application.config.middleware.use OmniAuth::Builder do
         idp_cert_fingerprint: ENV['SAML_IDP_CERT_FINGERPRINT'],
         name_identifier_format: ENV['SAML_NAME_IDENTIFIER_FORMAT'],
         uid_attribute: ENV['SAML_UID_ATTRIBUTE'],
+        request_attributes: [
+          { name: 'email', name_format: 'urn:oasis:names:tc:SAML:2.0:attrname-format:basic', friendly_name: 'Email', is_required: true },
+          { name: 'name', name_format: 'urn:oasis:names:tc:SAML:2.0:attrname-format:basic', friendly_name: 'Name',  is_required: true },
+          { name: 'role', name_format: 'urn:oasis:names:tc:SAML:2.0:attrname-format:basic', friendly_name: 'Role' }],
         attribute_statements: {
-          email:  [ENV['SAML_EMAIL_ATTRIBUTE'], 'http://schemas.xmlsoap.org/ws/2005/05/identity/claims/emailaddress'],
-          name:   [ENV['SAML_NAME_ATTRIBUTE'],  'http://schemas.xmlsoap.org/ws/2005/05/identity/claims/name'] },
+          email: [ENV['SAML_EMAIL_ATTRIBUTE'], 'http://schemas.xmlsoap.org/ws/2005/05/identity/claims/emailaddress', 'email', 'mail'],
+          name: [ENV['SAML_NAME_ATTRIBUTE'],  'http://schemas.xmlsoap.org/ws/2005/05/identity/claims/name', 'name'],
+          roles: [ENV['SAML_ROLES_ATTRIBUTE'], 'http://schemas.microsoft.com/ws/2008/06/identity/claims/role', 'role', 'roles'] },
         setup: SETUP_PROC
     end
     if Rails.configuration.omniauth_twitter
